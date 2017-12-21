@@ -1,0 +1,140 @@
+- hosts: localhost
+  become: false
+  gather_facts: false
+  tasks:
+    - name: get openshift-ansible
+      git:
+        repo: 'https://github.com/openshift/openshift-ansible.git'
+        dest: ../openshift-ansible
+        version: release-3.7
+
+- hosts: all
+  become: true
+  tasks:
+    - name: disable fastest mirror yum plugin
+      lineinfile: 
+        path: /etc/yum/pluginconf.d/fastestmirror.conf 
+        regexp: '^enabled=' 
+        line: 'enabled=0'
+
+- hosts: registries
+  become: true
+  tasks:
+    - name: install docker
+      yum: name=docker state=present
+
+    - name: install epel
+      yum: name=epel-release state=present
+
+    - name: install pip
+      yum: name=python2-pip state=present update_cache=yes
+
+    - name: install docker-py
+      pip: name=docker-py state=present
+
+    - name: set registry conf
+      template: src=docker-daemon.json dest=/etc/docker/daemon.json
+
+    - name: start en enable docker
+      systemd: name=docker enabled=true state=started
+
+    - name: fetch images
+      docker_image:
+        name: "{{ item }}"
+      with_items:
+        - registry:2
+    
+    - name: create /var/lib/registry
+      shell: mkdir -p /var/lib/registry
+      creates: /var/lib/registry
+
+    - name: place registry conf
+      template: src=registry.conf dest=/etc/docker/registry.conf
+    - name: Create registry container
+      docker_container:
+        name: registry
+        image: registry:2
+        restart_policy: always
+        volumes:
+          - /etc/docker/registry.conf:/etc/docker/registry/config.yml
+          - /var/lib/registry:/var/lib/registry:z
+        ports:
+          - 5000:5000
+
+
+- hosts: masters,glusterfs
+  become: true
+  handlers:
+    - name: restart_docker
+      systemd: name=docker state=restarted daemon_reload=yes
+  tasks:
+    - name: adding sdb to vg
+      lvg:
+        vg: systemvg
+        pvs: /dev/sda2,/dev/sdb
+    - name: fixing size
+      lvol:
+        vg: systemvg
+        lv: varlv
+        size: 25G
+    - name: growfs
+      filesystem:
+        fstype: xfs
+        dev: /dev/mapper/systemvg-varlv
+        resizefs: yes
+
+    - name: additional packages
+      yum: name={{ item }} state=present
+      with_items:
+        - atomic
+        - dbus-python
+        - docker
+        - iproute
+        - ostree
+        - python-rhsm-certificates
+        - PyYAML
+        - runc
+        - yum-utils
+    
+    - name: set registry conf
+      template: src=docker-daemon.json dest=/etc/docker/daemon.json
+
+    - name: start en enable docker
+      systemd: name=docker enabled=true state=started daemon_reload=yes
+
+
+- hosts: masters,glusterfs
+  become: true
+  serial: 1
+  tasks:
+    - name: pull openshift images
+      shell: atomic pull --storage ostree http:registry.vagrant.test:5000/openshift/{{ item }}:{{ openshift_image_tag }}
+      register: result
+      retries: 3
+      until: result.rc == 0
+      with_items:
+        - origin
+        - node
+        - openvswitch
+
+- hosts: masters
+  become: true
+  serial: 1
+  tasks:
+    - name: fetch images
+      shell: atomic pull --storage ostree "{{ item }}"
+      with_items:
+        - registry.fedoraproject.org/f26/etcd
+
+- hosts: glusterfs
+  become: true
+  serial: 1
+  tasks:
+    - name: docker pull images
+      shell: docker pull "{{ item }}"
+      with_items:
+        - gluster/gluster-centos
+        - heketi/heketi
+        - heketi/heketi:dev
+        - openshift/origin-pod:{{ openshift_image_tag }}
+        - openshift/origin-deployer:{{ openshift_image_tag }}

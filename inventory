@@ -1,0 +1,84 @@
+[OSEv3:children]
+masters
+nodes
+etcd
+glusterfs
+
+
+[registries:vars]
+ansible_user=vagrant
+ansible_become=true
+ansible_port=22
+ansible_ssh_private_key_file='~/.vagrant.d/insecure_private_key'
+debug_level=2
+
+
+[OSEv3:vars]
+ansible_user=vagrant
+ansible_become=true
+ansible_port=22
+ansible_ssh_private_key_file='~/.vagrant.d/insecure_private_key'
+debug_level=2
+
+containerized=True
+openshift_use_system_containers=True
+
+openshift_deployment_type=origin
+openshift_release=v3.7
+openshift_image_tag=v3.7.0
+openshift_repos_enable_testing=true
+
+openshift_docker_options='--selinux-enabled --insecure-registry 172.30.0.0/16 --insecure-registry registry.vagrant.test --add-registry registry.vagrant.test'
+
+openshift_docker_insecure_registries='172.30.0.0/16,registry.vagrant.test'
+
+
+
+
+# enable_excluders=false
+
+openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider', 'filename': '/etc/origin/master/htpasswd'}]
+openshift_disable_check=memory_availability,disk_availability,docker_image_availability,docker_storage
+openshift_master_cluster_method=native
+openshift_master_cluster_hostname=console.vagrant.test
+#openshift_master_cluster_public_hostname=console.vagrant.test
+#openshift_master_default_subdomain=apps.cluster.vagrant.test
+
+openshift_master_htpasswd_users={'admin': '$apr1$GlWEznSJ$cEQ9H8zbOyK2DZdEM/Blg/', 'developer': '$apr1$GlWEznSJ$cEQ9H8zbOyK2DZdEM/Blg/' }
+
+######FIXES#########:
+##https://github.com/openshift/openshift-ansible/issues/6435
+ansible_service_broker_image_prefix=ansibleplaybookbundle/origin-
+
+os_firewall_use_firewalld=false
+
+#########################
+
+
+[masters]
+master1.vagrant.test openshift_ip=192.168.77.21 openshift_schedulable=True
+#master2.vagrant.test openshift_ip=192.168.77.22
+#master3.vagrant.test openshift_ip=192.168.77.23
+
+[etcd]
+master1.vagrant.test openshift_ip=192.168.77.21
+#master2.vagrant.test openshift_ip=192.168.77.22
+#master3.vagrant.test openshift_ip=192.168.77.23
+
+[nodes]
+master1.vagrant.test openshift_ip=192.168.77.21 openshift_node_labels="{'region': 'infra', 'zone': 'default'}" openshift_schedulable=True
+# node1.vagrant.test openshift_ip=192.168.77.31 openshift_node_labels="{'region': 'primary', 'zone': 'green'}" openshift_schedulable=True
+# node2.vagrant.test openshift_ip=192.168.77.32 openshift_node_labels="{'region': 'primary', 'zone': 'blue'}" openshift_schedulable=True
+gluster1.vagrant.test openshift_ip=192.168.77.41 glusterfs_ip=192.168.77.41 openshift_node_labels="{'region': 'primary', 'zone': 'default'}" glusterfs_devices='[ "/dev/sdc", "/dev/sdd" ]' openshift_schedulable=True
+gluster2.vagrant.test openshift_ip=192.168.77.42 glusterfs_ip=192.168.77.42 openshift_node_labels="{'region': 'primary', 'zone': 'default'}" glusterfs_devices='[ "/dev/sdc", "/dev/sdd" ]' openshift_schedulable=True
+gluster3.vagrant.test openshift_ip=192.168.77.43 glusterfs_ip=192.168.77.43 openshift_node_labels="{'region': 'primary', 'zone': 'default'}" glusterfs_devices='[ "/dev/sdc", "/dev/sdd" ]' openshift_schedulable=True
+
+
+[glusterfs]
+gluster1.vagrant.test glusterfs_ip=192.168.77.41 openshift_node_labels="{'region': 'primary', 'zone': 'default'}" glusterfs_devices='[ "/dev/sdc", "/dev/sdd" ]' openshift_schedulable=True
+gluster2.vagrant.test glusterfs_ip=192.168.77.42 openshift_node_labels="{'region': 'primary', 'zone': 'default'}" glusterfs_devices='[ "/dev/sdc", "/dev/sdd" ]' openshift_schedulable=True
+gluster3.vagrant.test glusterfs_ip=192.168.77.43 openshift_node_labels="{'region': 'primary', 'zone': 'default'}" glusterfs_devices='[ "/dev/sdc", "/dev/sdd" ]' openshift_schedulable=True
+
+
+[registries]
+registry.vagrant.test 

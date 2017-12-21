@@ -1,0 +1,3 @@
+*.vmdk
+*.retry
+openshift-ansible

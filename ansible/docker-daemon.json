@@ -1,0 +1,4 @@
+{
+  "registry-mirrors": ["http://registry.vagrant.test:5000"], 
+  "insecure-registry": ["http://registry.vagrant.test:5000"]
+}
