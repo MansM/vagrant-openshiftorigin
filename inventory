@@ -21,17 +21,21 @@ ansible_ssh_private_key_file='~/.vagrant.d/insecure_private_key'
 debug_level=2
 
 containerized=True
-openshift_use_system_containers=True
+#openshift_use_system_containers=True
 
 openshift_deployment_type=origin
 openshift_release=v3.7
-openshift_image_tag=v3.7.0
+openshift_image_tag=v3.7.1
+#openshift_release=v3.6
+#openshift_image_tag=v3.6.1
+
 openshift_repos_enable_testing=true
 
 openshift_docker_options='--selinux-enabled --insecure-registry 172.30.0.0/16 --insecure-registry registry.vagrant.test --add-registry registry.vagrant.test'
 
 openshift_docker_insecure_registries='172.30.0.0/16,registry.vagrant.test'
 
+#system_images_registry=http:registry.vagrant.test:5000
 
 
 

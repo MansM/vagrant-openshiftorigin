@@ -82,9 +82,10 @@ Vagrant.configure(2) do |config|
           ansible.groups = {
             "masters" => ["master[1:#{MASTERS}].vagrant.test"],
             "etcd" => ["master[1:#{MASTERS}].vagrant.test"],
-            "nodes" => ["node[1:#{NODES}].vagrant.test"]
+            "nodes" => ["node[1:#{NODES}].vagrant.test"],
+            "registries" => ["registry.vagrant.test"]
           }
-          #ansible.raw_arguments = ["--inventory-file=/Users/mansmatulewicz/Documents/projecten/vagrant-atomic/inventory"]
+          ansible.raw_arguments = ["--inventory-file=./inventory"]
         end
       end
     end

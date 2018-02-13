@@ -21,3 +21,6 @@ Yes I did, this to maximize the surviveability of the local registry mirror
 You can destroy by adding the machine names
 
 ### there is no such thing as too many disks ;-)
+
+
+sudo killall -HUP mDNSResponder
